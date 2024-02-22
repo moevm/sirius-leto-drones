@@ -42,6 +42,43 @@ DEF_VISION_ATTR = False
 
 
 
+
+def straight(tmp_pos, tmp_rpy, delta):
+    target_pos = tmp_pos.copy()
+    target_pos[0] -= delta * np.cos(tmp_rpy[2])
+    target_pos[1] += delta * np.sin(tmp_rpy[2])
+    return target_pos
+
+def go_left(tmp_pos, tmp_rpy, delta):
+    target_pos = tmp_pos.copy()
+    """
+    TBD
+    """
+    return target_pos
+
+def go_right(tmp_pos, tmp_rpy, delta):
+    target_pos = tmp_pos.copy()
+    """
+    TBD
+    """
+    return target_pos
+
+def clockwise(tmp_rpy, delta):
+    target_rpy = tmp_rpy.copy()
+    return target_rpy
+
+def counterclockwise(tmp_rpy, delta):
+    target_rpy = tmp_rpy.copy()
+    target_rpy[2] += delta
+    return target_rpy
+
+def check_square(corners, image_size) -> bool:
+    '''
+    Расчет площади из углов и сравнение с площадью всей картиники - если больше определенного порога - значит мы прилители
+    '''
+    ...
+
+
 def run(
         drone=DEFAULT_DRONE,
         gui=DEFAULT_GUI,
@@ -54,23 +91,19 @@ def run(
         plot=True,
         colab=DEFAULT_COLAB
     ):
-    #### Initialize the simulation #############################
-    INIT_XYZS = np.array([[.0, .0, .1]]) # WARNING!!!!!!!!
 
     #### Initialize the trajectories ###########################
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
-    TARGET_POS = np.zeros((NUM_WP, 3)) 
-    for i in range(NUM_WP):
-        TARGET_POS[i] = [-2, -2 , .5]
-    print(f"vision_attributes : {vision_attributes} \t DEF_VISION_ATTR : {DEF_VISION_ATTR}")
+    
+    x = -1
+    y = -1
+    z = 0.5
 
-    INIT_XYZS = np.array([[-2, -2, .5]])
-    INIT_rpys = np.array([[0, 0, 1]])
+    INIT_XYZS = np.array([[x, y, z]])
     env = AutoAviary(drone_model=drone,
                      num_drones=1,
                      initial_xyzs=INIT_XYZS,
-                    #  initial_rpys=INIT_rpys,
                      physics=Physics.PYB_GND,
                      # physics=Physics.PYB, # For comparison
                      neighbourhood_radius=10,
@@ -97,36 +130,63 @@ def run(
     #### Initialize the controllers ############################
     ctrl = [DSLPIDControl(drone_model=drone)]
 
-
+    tmp_pos = [x, y, z]
+    tmp_rpy = [0, 0, 0]
+    target_pos = [None, None, None]
+    target_rpy = [None, None, None]
+    i = 0
     #### Run the simulation ####################################
     action = np.zeros((1,4))
     START = time.time()
-    for i in range(0, int(duration_sec*env.CTRL_FREQ)):
-        #### Step the simulation ###################################
-        obs, reward, terminated, truncated, info = env.step(action)
+    while True:
 
-        # Here we can process image
-        # Тут мы можем обработать изображение
+        obs, reward, terminated, truncated, info = env.step(action)
+        
+        if not i: 
+            target_pos = tmp_pos
+            target_rpy = [0, 0, 0]
+
+        # текущий шаг присваеваем как желаемый на поршлом ходу
+        tmp_pos = target_pos
+        tmp_rpy = target_rpy
+        
+        # продумываем последующий шаг
+
         if env.VISION_ATTR:
             drone_img = env.rgb[0].astype(np.uint8)
             drone_img = cv2.cvtColor(drone_img, cv2.COLOR_RGBA2BGR)
-            drone_img = detect_apriltags(drone_img)
-            cv2.imwrite(f'./screenshots/frame_{i}.png', drone_img)
-            # cv2.imshow("drone", drone_img)
-            # cv2.waitKey(1)
 
-        #### Compute control for the current way point #############
+            drone_img, center = detect_apriltags(drone_img)
+
+            if center is not None:
+                print(f'Tag founded at {center}')   
+
+                if (np.abs(center[1] - drone_img.shape[1]//2) - 70) < 20:
+                    print(f"Center in center: {(np.abs(center[1] - drone_img.shape[1]//2) - 70)}")    
+                    delta = 0.05
+                    target_pos = straight(tmp_pos, tmp_rpy, delta)
+                elif ((center[1] - drone_img.shape[1]//2) - 70) < 0:
+                    delta = 0.05
+                    go_left(tmp_pos, tmp_rpy, delta)
+                else:
+                    delta = 0.05
+                    go_right(tmp_pos, tmp_rpy, delta)
+            else:
+                delta = 0.02
+                target_rpy = counterclockwise(tmp_rpy, delta)
+                print("No tags in image")
+
+            cv2.imwrite(f'./screenshots/frame_{i}.png', drone_img)
+           
+
         action[0], _, _ = ctrl[0].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
                                                              state=obs[0],
-                                                             target_pos=TARGET_POS[wp_counter, :],
-                                                             target_rpy=[0,0, i/10]
-                                                            #  target_rpy=[0,0, 3.14]
+                                                             target_pos=target_pos,
+                                                             target_rpy=target_rpy
                                                              )
-
-
+        i += 1
         if wp_counter < NUM_WP - 1:
             wp_counter = wp_counter + 1
-        # uncomment for loop  --  но не стоит
         else:
             wp_counter = 0
 
@@ -149,10 +209,6 @@ def run(
 
     #### Close the environment #################################
     env.close()
-
-    # #### Save the simulation results ###########################
-    # logger.save() 
-    # logger.save_as_csv("dw") # Optional CSV save
 
     #### Plot the simulation results ###########################
     if plot:
