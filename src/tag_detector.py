@@ -14,6 +14,7 @@ def detect_apriltags(input_img: np.ndarray) -> np.ndarray:
     detector = at.Detector(options)
     detected_ats = detector.detect(grayscale_input_img)
     print(f"[INFO] drone detected {len(detected_ats)} apriltags")
+    center = None
     for detection in detected_ats:
         corners = np.array(detection.corners, dtype=np.int32)
         cv2.polylines(result_img, [corners], True, (0, 255, 0), 2)
@@ -21,7 +22,7 @@ def detect_apriltags(input_img: np.ndarray) -> np.ndarray:
         cv2.circle(result_img, tuple(center), 2, (0, 0, 255), -1)
         tag_id = detection.tag_id
         cv2.putText(result_img, str(tag_id), tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
-    return result_img
+    return result_img, center
 
 
 def main():
