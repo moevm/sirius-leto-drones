@@ -3,9 +3,9 @@ Example
 -------
 In a terminal, run as:
 
-    $ python online.py #запуск как обычной программы
-    $ python online.py --vision_attributes True --gui False  # нет gui, зато есть видео с дрона 
-    $ python online.py --vision_attributes # запуск видео + стандартная gui (сильно лагает, видео делается медленне)
+    $ python <name>.py #запуск как обычной программы
+    $ python <name>.py --vision_attributes True --gui False  # нет gui, зато есть видео с дрона 
+    $ python <name>.py --vision_attributes True  # запуск видео + стандартная gui (сильно лагает, видео делается медленне)
 
 
 """
@@ -18,7 +18,7 @@ import numpy as np
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-from env.AutoAviary import AutoAviary
+from gym_pybullet_drones.envs.AutoAviary import AutoAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
@@ -41,9 +41,13 @@ DEFAULT_COLAB = False
 DEF_VISION_ATTR = False
 
 
+def go_back(tmp_pos, tmp_rpy, delta):
+    target_pos = tmp_pos.copy()
+    target_pos[0] += delta * np.cos(tmp_rpy[2])
+    target_pos[1] -= delta * np.sin(tmp_rpy[2])
+    return target_pos
 
-
-def straight(tmp_pos, tmp_rpy, delta):
+def go_forward(tmp_pos, tmp_rpy, delta):
     target_pos = tmp_pos.copy()
     target_pos[0] -= delta * np.cos(tmp_rpy[2])
     target_pos[1] += delta * np.sin(tmp_rpy[2])
@@ -51,20 +55,19 @@ def straight(tmp_pos, tmp_rpy, delta):
 
 def go_left(tmp_pos, tmp_rpy, delta):
     target_pos = tmp_pos.copy()
-    """
-    TBD
-    """
+    target_pos[1] += delta * np.cos(tmp_rpy[2])
+    target_pos[0] -= delta * np.sin(tmp_rpy[2])
     return target_pos
 
 def go_right(tmp_pos, tmp_rpy, delta):
     target_pos = tmp_pos.copy()
-    """
-    TBD
-    """
+    target_pos[1] -= delta * np.cos(tmp_rpy[2])
+    target_pos[0] += delta * np.sin(tmp_rpy[2])
     return target_pos
 
 def clockwise(tmp_rpy, delta):
     target_rpy = tmp_rpy.copy()
+    target_rpy[2] -= delta
     return target_rpy
 
 def counterclockwise(tmp_rpy, delta):
@@ -72,11 +75,6 @@ def counterclockwise(tmp_rpy, delta):
     target_rpy[2] += delta
     return target_rpy
 
-def check_square(corners, image_size) -> bool:
-    '''
-    Расчет площади из углов и сравнение с площадью всей картиники - если больше определенного порога - значит мы прилители
-    '''
-    ...
 
 
 def run(
@@ -96,8 +94,12 @@ def run(
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
     
+    # x = -1
+    # y = -1
+    # z = 0.5
+
     x = -1
-    y = -1
+    y = -10
     z = 0.5
 
     INIT_XYZS = np.array([[x, y, z]])
@@ -139,6 +141,7 @@ def run(
     action = np.zeros((1,4))
     START = time.time()
     while True:
+        # print(f'\n\n{i}\n\n')
 
         obs, reward, terminated, truncated, info = env.step(action)
         
@@ -149,30 +152,34 @@ def run(
         # текущий шаг присваеваем как желаемый на поршлом ходу
         tmp_pos = target_pos
         tmp_rpy = target_rpy
-        
+
+        delta = 0.03
+
         # продумываем последующий шаг
 
         if env.VISION_ATTR:
             drone_img = env.rgb[0].astype(np.uint8)
             drone_img = cv2.cvtColor(drone_img, cv2.COLOR_RGBA2BGR)
 
-            drone_img, center = detect_apriltags(drone_img)
+            drone_img, center, area = detect_apriltags(drone_img, True)
 
             if center is not None:
                 print(f'Tag founded at {center}')   
 
                 if (np.abs(center[1] - drone_img.shape[1]//2) - 70) < 20:
                     print(f"Center in center: {(np.abs(center[1] - drone_img.shape[1]//2) - 70)}")    
-                    delta = 0.05
-                    target_pos = straight(tmp_pos, tmp_rpy, delta)
+                    # delta = 0.05
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta)
                 elif ((center[1] - drone_img.shape[1]//2) - 70) < 0:
-                    delta = 0.05
+                    # delta = 0.05
                     go_left(tmp_pos, tmp_rpy, delta)
+                    print("\nLEFT\n"*5)
                 else:
-                    delta = 0.05
+                    # delta = 0.05
                     go_right(tmp_pos, tmp_rpy, delta)
+                    print("\nRIGHT\n"*5)
             else:
-                delta = 0.02
+                delta = 0.01
                 target_rpy = counterclockwise(tmp_rpy, delta)
                 print("No tags in image")
 
