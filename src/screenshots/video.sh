@@ -4,7 +4,7 @@
 # -1) sudo apt install mpv
 # 0) sudo apt install ffmpeg
 # 1) chmod +x ./run_mp.sh
-# 2_ run the script to create "video.mp4" in the same directory: $ ./run_mp.sh
+# 2) run the script to create "video.mp4" in the same directory: $ ./run_mp.sh
 
 FRAME_RATE=10
 RESOLUTION=640x480

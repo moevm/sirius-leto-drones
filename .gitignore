@@ -2,8 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+auto_results
+*.mp4
 # C extensions
+*.png
+*.mp4
 *.so
 */__pycache__
 # Distribution / packaging

@@ -24,6 +24,7 @@ from gym_pybullet_drones.utils.Logger import Logger
 
 # import gym_pybullet_drones.utils.position_commads as pc
 from tag_detector import detect_apriltags
+from area_check import area_check
 
 
 DEFAULT_DRONE = DroneModel('cf2x')
@@ -136,6 +137,9 @@ def run(
     tmp_rpy = [0, 0, 0]
     target_pos = [None, None, None]
     target_rpy = [None, None, None]
+
+    last_area = 0
+
     i = 0
     #### Run the simulation ####################################
     action = np.zeros((1,4))
@@ -154,6 +158,7 @@ def run(
         tmp_rpy = target_rpy
 
         delta = 0.03
+        delta_rpy = 0.01
 
         # продумываем последующий шаг
 
@@ -163,25 +168,45 @@ def run(
 
             drone_img, center, area = detect_apriltags(drone_img, True)
 
+            
+            
             if center is not None:
-                print(f'Tag founded at {center}')   
-
+                # print(f'Tag founded at {center}')   
+                ratio = area_check(area)
+                last_area = ratio
+                print(f'\n{i} - {ratio}\n')
+                
                 if (np.abs(center[1] - drone_img.shape[1]//2) - 70) < 20:
                     print(f"Center in center: {(np.abs(center[1] - drone_img.shape[1]//2) - 70)}")    
                     # delta = 0.05
                     target_pos = go_forward(tmp_pos, tmp_rpy, delta)
                 elif ((center[1] - drone_img.shape[1]//2) - 70) < 0:
                     # delta = 0.05
-                    go_left(tmp_pos, tmp_rpy, delta)
+                    # go_left(tmp_pos, tmp_rpy, delta)
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
+                    target_rpy = counterclockwise(tmp_rpy, delta_rpy)
                     print("\nLEFT\n"*5)
                 else:
                     # delta = 0.05
-                    go_right(tmp_pos, tmp_rpy, delta)
+                    # go_right(tmp_pos, tmp_rpy, delta)
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
+                    target_rpy = clockwise(tmp_rpy, delta_rpy)
                     print("\nRIGHT\n"*5)
             else:
-                delta = 0.01
-                target_rpy = counterclockwise(tmp_rpy, delta)
-                print("No tags in image")
+
+                if last_area > 50: 
+                    print("Садимся")
+                    ...
+                elif last_area < 5:
+                    delta = 0.01
+                    target_rpy = counterclockwise(tmp_rpy, delta)
+                    print("No tags in image")
+                else:
+                    rng = np.random.default_rng()
+                    tmp_delta = rng.integers(low=0, high=10) / 100 
+                    print('Случайное движение при потере тыга ({tmp_delta})')  
+                    target_pos += tmp_delta
+
 
             cv2.imwrite(f'./screenshots/frame_{i}.png', drone_img)
            
