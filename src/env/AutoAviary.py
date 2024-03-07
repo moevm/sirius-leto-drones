@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 import numpy as np
 from gymnasium import spaces
@@ -471,8 +472,12 @@ class AutoAviary(BaseAviary):
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
     def _addObstacles(self):
+        SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+        path_3d_models = os.path.dirname(SCRIPT_DIR) + '/env/3d_models/'
+        path_testures = os.path.dirname(SCRIPT_DIR) + '/env/'
         if 1:
-            p.loadURDF('/home/oumuamua/sirius/env/3d_models/cube_with_sobaken.urdf',
+            # p.loadURDF('/home/oumuamua/sirius/env/3d_models/cube_with_sobaken.urdf',
+            p.loadURDF(f'{path_3d_models}cube_with_sobaken.urdf',
                    [1.5, 1.5, .5],
                    p.getQuaternionFromEuler([0, 0, 0]),
                    physicsClientId=self.CLIENT
@@ -484,7 +489,7 @@ class AutoAviary(BaseAviary):
 					globalScaling=1,					
 					physicsClientId=self.CLIENT
 					)
-            x = p.loadTexture('/home/oumuamua/Drones/gym-pybullet-drones/gym_pybullet_drones/envs/tag.png')
+            x = p.loadTexture(f'{path_testures}tag.png')
 
             p.changeVisualShape(c, -1, textureUniqueId=x)
 
