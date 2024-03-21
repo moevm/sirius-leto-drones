@@ -192,15 +192,15 @@ def run(
                 elif ((center[1] - drone_img.shape[0]//2) ) < 0:
                     # delta = 0.05
                     # go_left(tmp_pos, tmp_rpy, delta)
-                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
                     target_rpy = counterclockwise(tmp_rpy, delta_rpy/1.3)
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
                     print("\nLEFT\n"*5)
                     print(drone_img.shape[0]//2)  
                 else:
                     # delta = 0.05
                     # go_right(tmp_pos, tmp_rpy, delta)
-                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
                     target_rpy = clockwise(tmp_rpy, delta_rpy/1.3)
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
                     print("\nRIGHT\n"*5)
                     print(drone_img.shape[0]//2)  
             else:
