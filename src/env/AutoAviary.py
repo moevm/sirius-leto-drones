@@ -493,6 +493,18 @@ class AutoAviary(BaseAviary):
 
             p.changeVisualShape(c, -1, textureUniqueId=x)
 
+
+
+            cube = p.loadURDF('cube.urdf',
+					[0, -1, 1.5],					
+					p.getQuaternionFromEuler([0, 0, 0]),
+					globalScaling=1,					
+					physicsClientId=self.CLIENT
+					)
+            texture_1385 = p.loadTexture(f'{path_testures}tag2.png')
+            print(texture_1385)
+            p.changeVisualShape(cube, -1, textureUniqueId=texture_1385)
+            # exit(10)
 # -1 value is "link index"
 
 #(link index has something to do with "joints", of which the cube apparently has none)
