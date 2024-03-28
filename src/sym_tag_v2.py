@@ -23,7 +23,7 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
 # import gym_pybullet_drones.utils.position_commads as pc
-from tag_detector import detect_apriltags
+from tag_detector import detect_apriltags, detect_apriltag_by_id
 from area_check import area_check
 
 
@@ -82,6 +82,11 @@ def go_down(tmp_pos, delta):
         target_pos[2] -= delta
     return target_pos
 
+def go_up(tmp_pos, delta):
+    target_pos = tmp_pos.copy()
+    target_pos[2] += delta
+    return target_pos
+
     
 
 
@@ -106,9 +111,9 @@ def run(
     # x = -1
     # y = -1
     # z = 0.5
-
-    x = -1
-    y = -7
+    rng = np.random.default_rng()
+    x = rng.integers(low=0, high=1000) / 100 - 5
+    y = rng.integers(low=0, high=1000) / 100 - 5
     z = 0.5
 
     INIT_XYZS = np.array([[x, y, z]])
@@ -167,6 +172,8 @@ def run(
 
         delta = 0.03
         delta_rpy = 0.01
+        if i % 100 == 0:
+            ctrl[0].reset()
 
         # продумываем последующий шаг
 
@@ -174,7 +181,7 @@ def run(
             drone_img = env.rgb[0].astype(np.uint8)
             drone_img = cv2.cvtColor(drone_img, cv2.COLOR_RGBA2BGR)
 
-            drone_img, center, area = detect_apriltags(drone_img, True)
+            drone_img, center, area = detect_apriltag_by_id(drone_img, 1385, True)
 
             
             
@@ -217,8 +224,8 @@ def run(
                 else:
                     rng = np.random.default_rng()
                     tmp_delta = rng.integers(low=0, high=10) / 100 
-                    print(f'Случайное движение при потере тыга ({tmp_delta})')  
-                    target_pos += tmp_delta
+                    print(f'Случайное движение при потере тэга ({tmp_delta})')  
+                    target_rpy[2]  += tmp_delta
 
 
             cv2.imwrite(f'./screenshots/frame_{i}.png', drone_img)
