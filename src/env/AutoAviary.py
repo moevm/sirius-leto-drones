@@ -474,7 +474,7 @@ class AutoAviary(BaseAviary):
     def _addObstacles(self):
         SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
         path_3d_models = os.path.dirname(SCRIPT_DIR) + '/env/3d_models/'
-        path_testures = os.path.dirname(SCRIPT_DIR) + '/env/'
+        path_testures = os.path.dirname(SCRIPT_DIR) + '/env/testures/'
         if 1:
             # p.loadURDF('/home/oumuamua/sirius/env/3d_models/cube_with_sobaken.urdf',
             p.loadURDF(f'{path_3d_models}cube_with_sobaken.urdf',
