@@ -7,7 +7,7 @@ In a terminal, run as:
     $ python <name>.py --vision_attributes True --gui False  # нет gui, зато есть видео с дрона 
     $ python <name>.py --vision_attributes True  # запуск видео + стандартная gui (сильно лагает, видео делается медленне)
 
-
+    python3 sym_tag_v2.py --vision_attributes True --gui False
 """
 import time
 import argparse
@@ -23,7 +23,7 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
 # import gym_pybullet_drones.utils.position_commads as pc
-from tag_detector import detect_apriltags, detect_apriltag_by_id
+from tag_detector import detect_apriltags
 from area_check import area_check
 
 
@@ -82,11 +82,6 @@ def go_down(tmp_pos, delta):
         target_pos[2] -= delta
     return target_pos
 
-def go_up(tmp_pos, delta):
-    target_pos = tmp_pos.copy()
-    target_pos[2] += delta
-    return target_pos
-
     
 
 
@@ -111,9 +106,9 @@ def run(
     # x = -1
     # y = -1
     # z = 0.5
-    rng = np.random.default_rng()
-    x = rng.integers(low=0, high=1000) / 100 - 5
-    y = rng.integers(low=0, high=1000) / 100 - 5
+
+    x = -1
+    y = -7
     z = 0.5
 
     INIT_XYZS = np.array([[x, y, z]])
@@ -172,8 +167,6 @@ def run(
 
         delta = 0.03
         delta_rpy = 0.01
-        if i % 100 == 0:
-            ctrl[0].reset()
 
         # продумываем последующий шаг
 
@@ -181,35 +174,34 @@ def run(
             drone_img = env.rgb[0].astype(np.uint8)
             drone_img = cv2.cvtColor(drone_img, cv2.COLOR_RGBA2BGR)
 
-            drone_img, center, area = detect_apriltag_by_id(drone_img, 1385, True)
+            drone_img, centers, areas, id_tags = detect_apriltags(drone_img, True)
 
-            
-            
-            if center is not None:
-                # print(f'Tag founded at {center}')   
-                ratio = area_check(area)
-                last_area = ratio
-                print(f'\n{i} - {ratio}\n')
+            if len(centers) != 0:
+                for area in areas:  
+                    ratio = area_check(area)
+                    last_area = ratio
+                    print(f'\n{i} - {ratio}\n')
                 
-                if (np.abs(center[1] - drone_img.shape[0]//2) ) < 20:
-                    print(f"Center in center: {(np.abs(center[1] - drone_img.shape[0]//2) - 70)}")  
-                    print(drone_img.shape[0]//2)  
-                    # delta = 0.05
-                    target_pos = go_forward(tmp_pos, tmp_rpy, delta)
-                elif ((center[1] - drone_img.shape[0]//2) ) < 0:
-                    # delta = 0.05
-                    # go_left(tmp_pos, tmp_rpy, delta)
-                    target_rpy = counterclockwise(tmp_rpy, delta_rpy/1.3)
-                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
-                    print("\nLEFT\n"*5)
-                    print(drone_img.shape[0]//2)  
-                else:
-                    # delta = 0.05
-                    # go_right(tmp_pos, tmp_rpy, delta)
-                    target_rpy = clockwise(tmp_rpy, delta_rpy/1.3)
-                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
-                    print("\nRIGHT\n"*5)
-                    print(drone_img.shape[0]//2)  
+                for center in centers:
+                    if (np.abs(center[1] - drone_img.shape[0]//2) ) < 20:
+                        print(f"Center in center: {(np.abs(center[0] - drone_img.shape[0]//2) - 70)}")  
+                        print(drone_img.shape[0]//2)  
+                        # delta = 0.05
+                        target_pos = go_forward(tmp_pos, tmp_rpy, delta)
+                    elif ((center[1] - drone_img.shape[0]//2) ) < 0:
+                        # delta = 0.05
+                        # go_left(tmp_pos, tmp_rpy, delta)
+                        target_rpy = counterclockwise(tmp_rpy, delta_rpy/1.3)
+                        target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
+                        print("\nLEFT\n"*5)
+                        print(drone_img.shape[0]//2)  
+                    else:
+                        # delta = 0.05
+                        # go_right(tmp_pos, tmp_rpy, delta)
+                        target_rpy = clockwise(tmp_rpy, delta_rpy/1.3)
+                        target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
+                        print("\nRIGHT\n"*5)
+                        print(drone_img.shape[0]//2)  
             else:
 
                 if last_area > 50: 
@@ -224,8 +216,8 @@ def run(
                 else:
                     rng = np.random.default_rng()
                     tmp_delta = rng.integers(low=0, high=10) / 100 
-                    print(f'Случайное движение при потере тэга ({tmp_delta})')  
-                    target_rpy[2]  += tmp_delta
+                    print(f'Случайное движение при потере тыга ({tmp_delta})')  
+                    target_pos += tmp_delta
 
 
             cv2.imwrite(f'./screenshots/frame_{i}.png', drone_img)

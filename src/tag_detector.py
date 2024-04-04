@@ -3,11 +3,6 @@ import cv2
 import apriltag as at
 
 
-'''
- дополнить до того, чтобы вызвращались все центры, что нашлись 
-'''
-
-
 def detect_apriltags(input_img: np.ndarray, square_flag: bool) -> np.ndarray:
     """
     :param ndarray input_img: represents RGB opencv image
@@ -23,69 +18,38 @@ def detect_apriltags(input_img: np.ndarray, square_flag: bool) -> np.ndarray:
     """
     result_img = input_img.copy()
     grayscale_input_img = cv2.cvtColor(result_img, cv2.COLOR_RGB2GRAY)
-    options = at.DetectorOptions(families="tag36h10")
-    detector = at.Detector(options)
-    detected_ats = detector.detect(grayscale_input_img)
-    print(f"[INFO] drone detected {len(detected_ats)} apriltags")
-    center = None
-    square = None
-    for detection in detected_ats:
-        corners = np.array(detection.corners, dtype=np.int32)
-        cv2.polylines(result_img, [corners], True, (0, 255, 0), 2)
-        center = np.array(detection.center, dtype=np.int32)
-        cv2.circle(result_img, tuple(center), 2, (0, 0, 255), -1)
-        tag_id = detection.tag_id
-        cv2.putText(result_img, str(tag_id), tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
-        if square_flag:
-            square = cv2.contourArea(corners)
-    if square_flag:
-        return result_img, center, square
-    else:
-        return result_img, center
 
-def detect_apriltag_by_id(input_img: np.ndarray, id: int, square_flag: bool) -> np.ndarray:
-    """
-    :param ndarray input_img: represents RGB opencv image
-    :param bool square_flag: flag to find area of tag 
-    
-    if square_flag:
-        :returns ndarray: input_img copy with apriltags detected and marked
-        :returns center - center of tag
-        :returns square - value of tag square    
-    else:
-        :returns ndarray: input_img copy with apriltags detected and marked
-        :returns center - center of tag
-    """
-    result_img = input_img.copy()
-    grayscale_input_img = cv2.cvtColor(result_img, cv2.COLOR_RGB2GRAY)
     options = at.DetectorOptions(families="tag36h10")
     detector = at.Detector(options)
     detected_ats = detector.detect(grayscale_input_img)
     print(f"[INFO] drone detected {len(detected_ats)} apriltags")
     center = None
     square = None
+    centers = []
+    id_tags = []
+    squares = []
     for detection in detected_ats:
-        if detection.tag_id != id:
-            continue
         corners = np.array(detection.corners, dtype=np.int32)
         cv2.polylines(result_img, [corners], True, (0, 255, 0), 2)
         center = np.array(detection.center, dtype=np.int32)
+        centers.append(center)
         cv2.circle(result_img, tuple(center), 2, (0, 0, 255), -1)
         tag_id = detection.tag_id
+        id_tags.append(tag_id)
         cv2.putText(result_img, str(tag_id), tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
         if square_flag:
             square = cv2.contourArea(corners)
+            squares.append(square)
     if square_flag:
-        return result_img, center, square
+        return result_img, centers, squares, id_tags
     else:
         return result_img, center
 
 
 def main():
-    name = input("Введите имя файла в screenshots: ")
-    example = cv2.imread(f'./screenshots/{name}.png')
-    example , _ = detect_apriltags(example, False)
-    cv2.imwrite(f'{name}_tagged.png', example)
+    example = cv2.imread('images/example2.png')
+    detect_apriltags(example)
+    cv2.imwrite('images/example2_detected.png', example)
 
 
 if __name__ == '__main__':
