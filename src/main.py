@@ -23,8 +23,8 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
 # import gym_pybullet_drones.utils.position_commads as pc
-from tag_detector import detect_apriltags
-from area_check import area_check
+from utils.tag_detector import detect_apriltags
+from utils.area_check import area_check
 
 
 DEFAULT_DRONE = DroneModel('cf2x')
