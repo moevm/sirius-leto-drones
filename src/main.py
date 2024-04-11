@@ -22,9 +22,10 @@ from env.AutoAviary import AutoAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
-# import gym_pybullet_drones.utils.position_commads as pc
+
 from utils.tag_detector import detect_apriltags
 from utils.area_check import area_check
+from utils.wrapper import *
 
 
 DEFAULT_DRONE = DroneModel('cf2x')
@@ -33,55 +34,11 @@ DEFAULT_RECORD_VIDEO = False
 DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
 
-# DEFAULT_SIMULATION_FREQ_HZ = 480
-# DEFAULT_CONTROL_FREQ_HZ = 96
 
 DEFAULT_DURATION_SEC = 12
-DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_OUTPUT_FOLDER = 'auto_results'
 DEFAULT_COLAB = False
 DEF_VISION_ATTR = False
-
-
-def go_back(tmp_pos, tmp_rpy, delta):
-    target_pos = tmp_pos.copy()
-    target_pos[0] += delta * np.cos(tmp_rpy[2])
-    target_pos[1] -= delta * np.sin(tmp_rpy[2])
-    return target_pos
-
-def go_forward(tmp_pos, tmp_rpy, delta):
-    target_pos = tmp_pos.copy()
-    target_pos[0] -= delta * np.cos(tmp_rpy[2])
-    target_pos[1] += delta * np.sin(tmp_rpy[2])
-    return target_pos
-
-def go_left(tmp_pos, tmp_rpy, delta):
-    target_pos = tmp_pos.copy()
-    target_pos[1] += delta * np.cos(tmp_rpy[2])
-    target_pos[0] -= delta * np.sin(tmp_rpy[2])
-    return target_pos
-
-def go_right(tmp_pos, tmp_rpy, delta):
-    target_pos = tmp_pos.copy()
-    target_pos[1] -= delta * np.cos(tmp_rpy[2])
-    target_pos[0] += delta * np.sin(tmp_rpy[2])
-    return target_pos
-
-def clockwise(tmp_rpy, delta):
-    target_rpy = tmp_rpy.copy()
-    target_rpy[2] -= delta
-    return target_rpy
-
-def counterclockwise(tmp_rpy, delta):
-    target_rpy = tmp_rpy.copy()
-    target_rpy[2] += delta
-    return target_rpy
-
-def go_down(tmp_pos, delta):
-    target_pos = tmp_pos.copy()
-    if target_pos[2] > 0.01:
-        target_pos[2] -= delta
-    return target_pos
-
     
 
 
