@@ -41,8 +41,6 @@ DEFAULT_COLAB = False
 DEF_VISION_ATTR = False
     
 
-
- 
 def run(
         drone=DEFAULT_DRONE,
         gui=DEFAULT_GUI,

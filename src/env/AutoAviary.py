@@ -474,7 +474,7 @@ class AutoAviary(BaseAviary):
     def _addObstacles(self):
         SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
         path_3d_models = os.path.dirname(SCRIPT_DIR) + '/env/3d_models/'
-        path_testures = os.path.dirname(SCRIPT_DIR) + '/env/testures/'
+        path_textures = os.path.dirname(SCRIPT_DIR) + '/env/textures/'
         if 1:
             # p.loadURDF('/home/oumuamua/sirius/env/3d_models/cube_with_sobaken.urdf',
             p.loadURDF(f'{path_3d_models}cube_with_sobaken.urdf',
@@ -489,7 +489,7 @@ class AutoAviary(BaseAviary):
 					globalScaling=1,					
 					physicsClientId=self.CLIENT
 					)
-            x = p.loadTexture(f'{path_testures}tag.png')
+            x = p.loadTexture(f'{path_textures}tag1359.png')
 
             p.changeVisualShape(c, -1, textureUniqueId=x)
 
@@ -501,7 +501,7 @@ class AutoAviary(BaseAviary):
 					globalScaling=1,					
 					physicsClientId=self.CLIENT
 					)
-            texture_1385 = p.loadTexture(f'{path_testures}tag2.png')
+            texture_1385 = p.loadTexture(f'{path_textures}tag1384.png')
             print(texture_1385)
             p.changeVisualShape(cube, -1, textureUniqueId=texture_1385)
             # exit(10)
