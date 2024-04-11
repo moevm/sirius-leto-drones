@@ -501,7 +501,7 @@ class AutoAviary(BaseAviary):
 					globalScaling=1,					
 					physicsClientId=self.CLIENT
 					)
-            texture_1385 = p.loadTexture(f'{path_testures}april_36h11-252.png')
+            texture_1385 = p.loadTexture(f'{path_testures}tag2.png')
             print(texture_1385)
             p.changeVisualShape(cube, -1, textureUniqueId=texture_1385)
             # exit(10)
