@@ -7,7 +7,7 @@ In a terminal, run as:
     $ python <name>.py --vision_attributes True --gui False  # нет gui, зато есть видео с дрона 
     $ python <name>.py --vision_attributes True  # запуск видео + стандартная gui (сильно лагает, видео делается медленне)
 
-    python3 sym_tag_v2.py --vision_attributes True --gui False
+    python3 main.py --vision_attributes True --gui False
 """
 import time
 import argparse
@@ -23,7 +23,7 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
 
-from utils.tag_detector import detect_apriltags
+from utils.tag_detector import detect_apriltags, detect_apriltags_with_blur
 from utils.area_check import area_check
 from utils.wrapper import *
 
@@ -129,7 +129,7 @@ def run(
             drone_img = env.rgb[0].astype(np.uint8)
             drone_img = cv2.cvtColor(drone_img, cv2.COLOR_RGBA2BGR)
 
-            drone_img, centers, areas, id_tags = detect_apriltags(drone_img, True)
+            drone_img, centers, areas, id_tags = detect_apriltags_with_blur(drone_img, True)
 
             if len(centers) != 0:
                 for area in areas:  

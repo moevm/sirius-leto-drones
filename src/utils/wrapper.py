@@ -1,3 +1,5 @@
+import numpy as np
+
 def go_back(tmp_pos, tmp_rpy, delta):
     target_pos = tmp_pos.copy()
     target_pos[0] += delta * np.cos(tmp_rpy[2])
