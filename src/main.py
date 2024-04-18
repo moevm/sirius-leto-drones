@@ -7,7 +7,7 @@ In a terminal, run as:
     $ python <name>.py --vision_attributes True --gui False  # нет gui, зато есть видео с дрона 
     $ python <name>.py --vision_attributes True  # запуск видео + стандартная gui (сильно лагает, видео делается медленне)
 
-    python3 main.py --vision_attributes True --gui False
+    python main.py --vision_attributes True --gui False
 """
 import time
 import argparse
@@ -39,7 +39,9 @@ DEFAULT_DURATION_SEC = 12
 DEFAULT_OUTPUT_FOLDER = 'auto_results'
 DEFAULT_COLAB = False
 DEF_VISION_ATTR = False
-    
+
+TAG_ID_FIRST = 1384
+TAG_ID_SECOND = 1359
 
 def run(
         drone=DEFAULT_DRONE,
@@ -107,63 +109,58 @@ def run(
     #### Run the simulation ####################################
     action = np.zeros((1,4))
     START = time.time()
+    # target_tag_id = 1359
+    target_tag_id = 1384
     while True:
-        # print(f'\n\n{i}\n\n')
-
         obs, reward, terminated, truncated, info = env.step(action)
-        
         if not i: 
             target_pos = tmp_pos
             target_rpy = [0, 0, 0]
-
-        # текущий шаг присваеваем как желаемый на поршлом ходу
         tmp_pos = target_pos
         tmp_rpy = target_rpy
-
         delta = 0.03
         delta_rpy = 0.01
 
-        # продумываем последующий шаг
 
         if env.VISION_ATTR:
             drone_img = env.rgb[0].astype(np.uint8)
             drone_img = cv2.cvtColor(drone_img, cv2.COLOR_RGBA2BGR)
 
             drone_img, centers, areas, id_tags = detect_apriltags_with_blur(drone_img, True)
-
-            if len(centers) != 0:
-                for area in areas:  
-                    ratio = area_check(area)
-                    last_area = ratio
-                    print(f'\n{i} - {ratio}\n')
-                for center in centers:
-                    if (np.abs(center[1] - drone_img.shape[0]//2) ) < 20:
-                        print(f"Center in center: {(np.abs(center[0] - drone_img.shape[0]//2) - 70)}")  
-                        print(drone_img.shape[0]//2)  
-                        print(f'tag id:{id_tags}')
-                        # delta = 0.05
-                        target_pos = go_forward(tmp_pos, tmp_rpy, delta)
-                    elif ((center[1] - drone_img.shape[0]//2) ) < 0:
-                        # delta = 0.05
-                        # go_left(tmp_pos, tmp_rpy, delta)
-                        target_rpy = counterclockwise(tmp_rpy, delta_rpy/1.3)
-                        target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
-                        print("\nLEFT\n"*5)
-                        print(drone_img.shape[0]//2)  
-                    else:
-                        # delta = 0.05
-                        # go_right(tmp_pos, tmp_rpy, delta)
-                        target_rpy = clockwise(tmp_rpy, delta_rpy/1.3)
-                        target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
-                        print("\nRIGHT\n"*5)
-                        print(drone_img.shape[0]//2)  
+    
+            if target_tag_id in id_tags:
+                index_target_tag = id_tags.index(target_tag_id)
+                area = areas[index_target_tag]
+                ratio = area_check(area)
+                last_area = ratio
+                print(f'\n{i} - {ratio}\n')
+                center = centers[index_target_tag]
+                if (np.abs(center[1] - drone_img.shape[0]//2) ) < 20:
+                    print(f"Center in center: {(np.abs(center[0] - drone_img.shape[0]//2) - 70)}")  
+                    print(drone_img.shape[0]//2)  
+                    print(f'tag id:{id_tags}')
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta)
+                elif ((center[1] - drone_img.shape[0]//2) ) < 0:
+                    target_rpy = counterclockwise(tmp_rpy, delta_rpy/1.3)
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
+                    print("\nLEFT\n"*5)
+                    print(drone_img.shape[0]//2)  
+                else:
+                    target_rpy = clockwise(tmp_rpy, delta_rpy/1.3)
+                    target_pos = go_forward(tmp_pos, tmp_rpy, delta / 2)
+                    print("\nRIGHT\n"*5)
+                    print(drone_img.shape[0]//2)  
             else:
-
                 if last_area > 50: 
                     print("Садимся")
-                    target_pos = go_down(tmp_pos, delta )
-                elif last_area > 50:
-                    print("Садимся")
+                    target_pos = go_down(tmp_pos, delta)
+                    if target_pos is None:
+                        if target_tag_id == 1384:
+                            target_tag_id = 1359
+                        elif target_tag_id == 1359:
+                            target_tag_id = 1384
+                        else:
+                            break
                 elif last_area < 5:
                     delta = 0.01
                     target_rpy = counterclockwise(tmp_rpy, delta)
@@ -171,7 +168,7 @@ def run(
                 else:
                     rng = np.random.default_rng()
                     tmp_delta = rng.integers(low=0, high=10) / 100 
-                    print(f'Случайное движение при потере тыга ({tmp_delta})')  
+                    print(f'Случайное движение при потере тэга ({tmp_delta})')  
                     target_pos += tmp_delta
 
 
@@ -206,12 +203,12 @@ def run(
         if gui:
             sync(i, START, env.CTRL_TIMESTEP)
 
-    #### Close the environment #################################
-    env.close()
+    # #### Close the environment #################################
+    # env.close()
 
-    #### Plot the simulation results ###########################
-    if plot:
-        logger.plot()
+    # #### Plot the simulation results ###########################
+    # if plot:
+    #     logger.plot()
 
 
 if __name__ == "__main__":

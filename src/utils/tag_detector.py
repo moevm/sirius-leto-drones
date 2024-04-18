@@ -32,19 +32,20 @@ def detect_apriltags_with_blur(input_img: np.ndarray, square_flag: bool) -> np.n
     squares = []
     for detection in detected_ats:
         corners = np.array(detection.corners, dtype=np.int32)
-        cv2.polylines(grayscale_input_img, [corners], True, (0, 255, 0), 2)
+        cv2.polylines(result_img, [corners], True, (0, 255, 0), 2)
         center = np.array(detection.center, dtype=np.int32)
         centers.append(center)
-        cv2.circle(grayscale_input_img, tuple(center), 2, (0, 0, 255), -1)
+        cv2.circle(result_img, tuple(center), 2, (0, 0, 255), -1)
         tag_id = detection.tag_id
         id_tags.append(tag_id)
-        cv2.putText(grayscale_input_img, str(tag_id), tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+        cv2.putText(result_img, str(tag_id), tuple(center), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
         if square_flag:
             square = cv2.contourArea(corners)
             squares.append(square)
     if square_flag:
-        return grayscale_input_img, centers, squares, id_tags
+        return result_img, centers, squares, id_tags
     else:
+        return result_img, centers
         return grayscale_input_img, centers
 
 

@@ -38,4 +38,6 @@ def go_down(tmp_pos, delta):
     target_pos = tmp_pos.copy()
     if target_pos[2] > 0.01:
         target_pos[2] -= delta
+    else:
+        None
     return target_pos

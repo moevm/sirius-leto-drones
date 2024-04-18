@@ -493,8 +493,6 @@ class AutoAviary(BaseAviary):
 
             p.changeVisualShape(c, -1, textureUniqueId=x)
 
-
-
             cube = p.loadURDF('cube.urdf',
 					[0, -1, 1.5],					
 					p.getQuaternionFromEuler([0, 0, 0]),
@@ -504,34 +502,5 @@ class AutoAviary(BaseAviary):
             texture_1385 = p.loadTexture(f'{path_textures}tag1384.png')
             print(texture_1385)
             p.changeVisualShape(cube, -1, textureUniqueId=texture_1385)
-            # exit(10)
-# -1 value is "link index"
-
-#(link index has something to do with "joints", of which the cube apparently has none)
-            # p.loadURDF("block.urdf",
-            #            [.1, 0, .1],
-            #            p.getQuaternionFromEuler([0, 0, 0]),
-            #            physicsClientId=self.CLIENT
-            #            )
-            # p.loadURDF("cube_small.urdf",
-            #            [0, .1, .1],
-            #            p.getQuaternionFromEuler([0, 0, 0]),
-            #            physicsClientId=self.CLIENT
-            #            )
-            # p.loadURDF("duck_vhacd.urdf",
-            #            [-.1, 0, .1],
-            #            p.getQuaternionFromEuler([0, 0, 0]),
-            #            physicsClientId=self.CLIENT
-            #            )
-            # p.loadURDF("teddy_vhacd.urdf",
-            #            [0, -.1, .1],
-            #            p.getQuaternionFromEuler([10, 10, 0]),
-            #            physicsClientId=self.CLIENT
-            #            )
-            # p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/urdfs_for_obstacles/monkey.urdf'),
-            #        [0, -.1, .55],
-            #        p.getQuaternionFromEuler([0, 0, 0]),
-            #        physicsClientId=self.CLIENT
-            #        )
         else:
             pass
