@@ -18,6 +18,8 @@ def detect_apriltags(input_img: np.ndarray, square_flag: bool) -> np.ndarray:
     """
     result_img = input_img.copy()
     grayscale_input_img = cv2.cvtColor(result_img, cv2.COLOR_RGB2GRAY)
+    grayscale_input_img= cv2.GaussianBlur(grayscale_input_img,(3,3),0 )
+    r,grayscale_input_img = cv2.threshold(grayscale_input_img, 127, 255, 0)
 
     options = at.DetectorOptions(families="tag36h10")
     detector = at.Detector(options)
