@@ -136,11 +136,11 @@ def run(
                     ratio = area_check(area)
                     last_area = ratio
                     print(f'\n{i} - {ratio}\n')
-                
                 for center in centers:
                     if (np.abs(center[1] - drone_img.shape[0]//2) ) < 20:
                         print(f"Center in center: {(np.abs(center[0] - drone_img.shape[0]//2) - 70)}")  
                         print(drone_img.shape[0]//2)  
+                        print(f'tag id:{id_tags}')
                         # delta = 0.05
                         target_pos = go_forward(tmp_pos, tmp_rpy, delta)
                     elif ((center[1] - drone_img.shape[0]//2) ) < 0:
