@@ -14,6 +14,7 @@ import argparse
 
 import cv2
 import numpy as np
+import sys
 
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
@@ -43,6 +44,60 @@ DEF_VISION_ATTR = False
 TAG_ID_FIRST = 1384
 TAG_ID_SECOND = 1359
 
+
+class State:
+    def __init__(self) -> None:
+        self.tag_list = []
+        self.tmp_tag_idx = 0
+        self._init_tag_list()
+
+    def get_tmp_tag_id(self) -> int:
+        return self.tag_list[self.tmp_tag_idx].id
+    
+    def get_tmp_tag_pos(self) -> int:
+        return self.tag_list[self.tmp_tag_idx].pos
+    
+    def get_tmp_tag_destance(self, drone_pos:list = None)->int:
+        if drone_pos is None or len(drone_pos) != 3:
+            return None
+        return self.tag_list[self.tmp_tag_idx].get_distance_for_drones(drone_pos)
+    
+    def set_next_tmp_idx(self, idx:int=None) -> None:
+        if idx is None:
+            self.tmp_tag_idx += 1
+        elif isinstance(idx, int):
+            self.tmp_tag_idx = idx
+        else: 
+            raise "ERROR set_next_tmp_idx must be integer"
+        if self.tmp_tag_idx > len(self.tag_list) - 1:
+            return -1
+
+        
+  
+    def _init_tag_list(self):
+        self.tag_list.append(TagInfo(id=1384, pos=[10, -5, 1.5]))
+        self.tag_list.append(TagInfo(id=1359, pos=[3, 4, .5]))
+        self.tag_list.append(TagInfo(id=1384, pos=[10, -5, 1.5]))
+
+    
+
+class TagInfo:
+    def __init__(self, id:int = None, pos:list = [None, None, None]) -> None:
+        self.id = id
+        self.pos = pos
+        self.ragius = 5
+
+    def get_distance_for_drones(self, drone_pos:list = None)->int:
+        if drone_pos is not None:
+            return np.sqrt((self.pos[0] - drone_pos[0])**2 + (self.pos[1] - drone_pos[1])**2 + (self.pos[2] - drone_pos[2])**2)  
+        else:
+            return None
+        
+    def __str__(self):
+        return f'Tag \t id = {self.id} \t pos = {self.pos}\n'
+        
+
+
 def run(
         drone=DEFAULT_DRONE,
         gui=DEFAULT_GUI,
@@ -60,14 +115,13 @@ def run(
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
     
-    # x = -1
-    # y = -1
-    # z = 0.5
-
+   
     x = -1
     y = -7
     z = 0.5
 
+    state_info = State()
+    
     INIT_XYZS = np.array([[x, y, z]])
     env = AutoAviary(drone_model=drone,
                      num_drones=1,
@@ -110,7 +164,7 @@ def run(
     action = np.zeros((1,4))
     START = time.time()
     # target_tag_id = 1359
-    target_tag_id = 1384
+    
     while True:
         obs, reward, terminated, truncated, info = env.step(action)
         if not i: 
@@ -128,8 +182,8 @@ def run(
 
             drone_img, centers, areas, id_tags = detect_apriltags_with_blur(drone_img, True)
     
-            if target_tag_id in id_tags:
-                index_target_tag = id_tags.index(target_tag_id)
+            if state_info.get_tmp_tag_id() in id_tags:
+                index_target_tag = id_tags.index(state_info.get_tmp_tag_id())
                 area = areas[index_target_tag]
                 ratio = area_check(area)
                 last_area = ratio
@@ -155,12 +209,10 @@ def run(
                     print("Садимся")
                     target_pos = go_down(tmp_pos, delta)
                     if target_pos is None:
-                        if target_tag_id == 1384:
-                            target_tag_id = 1359
-                        elif target_tag_id == 1359:
-                            target_tag_id = 1384
-                        else:
-                            break
+                        code = state_info.set_next_tmp_idx()
+                        if code is not None:
+                            print("Вы прибыли в место назначения!")
+                            sys.exit(0)
                 elif last_area < 5:
                     delta = 0.01
                     target_rpy = counterclockwise(tmp_rpy, delta)

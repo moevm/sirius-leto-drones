@@ -484,23 +484,22 @@ class AutoAviary(BaseAviary):
                    )
             
             c = p.loadURDF('cube.urdf',
-					[-1.1, 1, .5],					
+					[3, 4, .5],					
 					p.getQuaternionFromEuler([0, 0, 0]),
 					globalScaling=1,					
 					physicsClientId=self.CLIENT
 					)
-            x = p.loadTexture(f'{path_textures}tag1359.png')
+            texture_1359 = p.loadTexture(f'{path_textures}tag1359.png')
 
-            p.changeVisualShape(c, -1, textureUniqueId=x)
+            p.changeVisualShape(c, -1, textureUniqueId=texture_1359)
 
             cube = p.loadURDF('cube.urdf',
-					[0, -1, 1.5],					
+					[10, -5, 1.5],					
 					p.getQuaternionFromEuler([0, 0, 0]),
 					globalScaling=1,					
 					physicsClientId=self.CLIENT
 					)
-            texture_1385 = p.loadTexture(f'{path_textures}tag1384.png')
-            print(texture_1385)
-            p.changeVisualShape(cube, -1, textureUniqueId=texture_1385)
+            texture_1384 = p.loadTexture(f'{path_textures}tag1384.png')
+            p.changeVisualShape(cube, -1, textureUniqueId=texture_1384)
         else:
             pass
